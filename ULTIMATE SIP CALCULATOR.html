@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal SIP, Lumpsum & SWP Calculator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .num-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom Range Slider Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 999px;
+            background: #334155;
+        }
+        html:not(.dark) input[type="range"]::-webkit-slider-runnable-track {
+            background: #cbd5e1;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -5px;
+            background-color: #6366f1;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.18);
+            background-color: #4f46e5;
+        }
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.4);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+                    <i class="fa-solid fa-chart-line text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg sm:text-xl font-bold tracking-tight">Universal Wealth & SIP Engine</h1>
+                        <span class="hidden sm:inline-block text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">Unit-Free Edition</span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">SIP • Initial Lumpsum • Variable Schedule • Custom Day Intervals • Inflation & SWP</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-2.5">
+                <!-- Target Corpus Goal Planner Button -->
+                <button onclick="openModal('goalModal')" class="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-bullseye"></i>
+                    <span>Target Finder</span>
+                </button>
+
+                <!-- Share Link Button -->
+                <button onclick="copyShareableUrl()" class="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5" title="Copy configuration link">
+                    <i class="fa-solid fa-link"></i>
+                    <span class="hidden md:inline">Share Config</span>
+                </button>
+
+                <!-- Reset Button -->
+                <button onclick="resetDefaults()" class="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/10 hover:text-rose-500 text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5" title="Reset all inputs to default">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span class="hidden md:inline">Reset</span>
+                </button>
+
+                <!-- GitHub Pages Guide Button -->
+                <button onclick="openModal('githubModal')" class="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-brands fa-github"></i>
+                    <span class="hidden sm:inline">Publish on GitHub</span>
+                </button>
+
+                <!-- Dark / Light Mode Toggle -->
+                <button onclick="toggleTheme()" id="themeBtn" class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 transition" title="Toggle Dark/Light Theme">
+                    <i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i>
+                    <i class="fa-solid fa-moon inline dark:hidden text-slate-700"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast Notification Banner -->
+    <div id="toastBanner" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-xl border border-slate-700 dark:border-slate-200 flex items-center gap-2.5 text-sm font-medium">
+        <i class="fa-solid fa-circle-check text-emerald-400 dark:text-emerald-600"></i>
+        <span id="toastMessage">Action completed!</span>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="max-w-[1600px] mx-auto px-4 sm:px-6 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- LEFT COLUMN: INPUT CONTROLS (5 Cols on large screens) -->
+            <div class="lg:col-span-5 space-y-5">
+
+                <!-- Precision Mode Selector -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <i class="fa-solid fa-sliders text-indigo-500"></i>
+                        <div>
+                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Number Display Format</h2>
+                            <p class="text-xs text-slate-400 dark:text-slate-500">Pure unit-free numerical formatting</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="decimalPlaces" onchange="calculateAll()" class="text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="0">Whole Numbers (1,250,000)</option>
+                            <option value="2" selected>2 Decimals (1,250,000.00)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- SECTION 1: INITIAL LUMPSUM & REGULAR SIP CONTRIBUTIONS -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-xs font-bold">1</span>
+                            <h3 class="font-semibold text-sm sm:text-base">Deposits: Lumpsum & Regular SIP</h3>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-mono">INFLOWS</span>
+                    </div>
+
+                    <div class="p-5 space-y-5">
+                        <!-- Initial Lumpsum -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="lumpsumInput" class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Initial Lumpsum Deposit (Day 1)</label>
+                                <input type="number" id="lumpsumInput" value="50000" min="0" step="1000" oninput="syncSlider('lumpsumInput', 'lumpsumSlider'); calculateAll()" class="num-font w-36 text-right text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <input type="range" id="lumpsumSlider" min="0" max="1000000" step="5000" value="50000" oninput="syncInput('lumpsumSlider', 'lumpsumInput'); calculateAll()" class="w-full">
+                            <div class="flex justify-between text-[10px] text-slate-400 mt-1 num-font">
+                                <span>0</span>
+                                <span>250,000</span>
+                                <span>500,000</span>
+                                <span>1,000,000+</span>
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100 dark:border-slate-800">
+
+                        <!-- Regular SIP Contribution -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="sipAmountInput" class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Periodic SIP Contribution</label>
+                                <input type="number" id="sipAmountInput" value="5000" min="0" step="500" oninput="syncSlider('sipAmountInput', 'sipAmountSlider'); calculateAll()" class="num-font w-36 text-right text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <input type="range" id="sipAmountSlider" min="0" max="100000" step="500" value="5000" oninput="syncInput('sipAmountSlider', 'sipAmountInput'); calculateAll()" class="w-full">
+                        </div>
+
+                        <!-- Contribution Frequency & Custom Days -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Contribution Frequency</label>
+                                <select id="sipFrequency" onchange="toggleCustomDays('sip'); calculateAll()" class="w-full text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="monthly" selected>Monthly (12 / year)</option>
+                                    <option value="weekly">Weekly (52 / year)</option>
+                                    <option value="biweekly">Bi-Weekly (Every 14 days)</option>
+                                    <option value="quarterly">Quarterly (4 / year)</option>
+                                    <option value="annually">Annually (1 / year)</option>
+                                    <option value="daily">Daily (365 / year)</option>
+                                    <option value="custom">Custom Number of Days...</option>
+                                </select>
+                            </div>
+
+                            <!-- Custom Days Input for SIP -->
+                            <div id="sipCustomDaysWrap" class="hidden">
+                                <label class="block text-xs font-medium text-indigo-500 mb-1">Add Money Every (Days)</label>
+                                <div class="relative">
+                                    <input type="number" id="sipCustomDays" value="15" min="1" max="3650" oninput="calculateAll()" class="num-font w-full text-sm font-semibold bg-indigo-500/10 border border-indigo-500/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <span class="absolute right-3 top-2 text-xs text-indigo-400">days</span>
+                                </div>
+                            </div>
+
+                            <!-- Deposit Timing -->
+                            <div id="sipTimingWrap">
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Deposit Timing</label>
+                                <select id="sipTiming" onchange="calculateAll()" class="w-full text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="start" selected>Beginning of Period</option>
+                                    <option value="end">End of Period</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Step-Up SIP (Annual Increase) -->
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200">Annual Step-Up (Increase SIP Yearly)</span>
+                                    <p class="text-[11px] text-slate-400">Automatically boost periodic contribution each year</p>
+                                </div>
+                                <select id="stepUpType" onchange="calculateAll()" class="text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 font-medium">
+                                    <option value="percent" selected>% Percentage / Yr</option>
+                                    <option value="flat">Fixed Amount / Yr</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="range" id="stepUpSlider" min="0" max="50" step="1" value="5" oninput="syncInput('stepUpSlider', 'stepUpInput'); calculateAll()" class="flex-1">
+                                <input type="number" id="stepUpInput" value="5" min="0" step="0.5" oninput="syncSlider('stepUpInput', 'stepUpSlider'); calculateAll()" class="num-font w-24 text-right text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: DURATION, RETURN RATE & VARIABLE SCHEDULE -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center text-xs font-bold">2</span>
+                            <h3 class="font-semibold text-sm sm:text-base">Duration & Return Rate (Fixed / Variable)</h3>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-mono">GROWTH</span>
+                    </div>
+
+                    <div class="p-5 space-y-5">
+                        <!-- Duration: Years + Extra Months -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Investment Duration</label>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1">
+                                        <input type="number" id="durationYears" value="15" min="0" max="100" oninput="syncSlider('durationYears', 'durationSlider'); rebuildVariableSchedule(); calculateAll()" class="num-font w-12 text-right text-sm font-semibold bg-transparent focus:outline-none">
+                                        <span class="text-xs text-slate-400 ml-1">Yrs</span>
+                                    </div>
+                                    <div class="flex items-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1">
+                                        <input type="number" id="durationMonths" value="0" min="0" max="11" oninput="rebuildVariableSchedule(); calculateAll()" class="num-font w-10 text-right text-sm font-semibold bg-transparent focus:outline-none">
+                                        <span class="text-xs text-slate-400 ml-1">Mos</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="range" id="durationSlider" min="1" max="50" step="1" value="15" oninput="syncInput('durationSlider', 'durationYears'); rebuildVariableSchedule(); calculateAll()" class="w-full">
+                            <div class="flex justify-between text-[10px] text-slate-400 mt-1 num-font">
+                                <span>1 Yr</span>
+                                <span>15 Yrs</span>
+                                <span>30 Yrs</span>
+                                <span>50 Yrs</span>
+                            </div>
+                        </div>
+
+                        <!-- Return Mode Toggle: Fixed vs Variable -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Return & Variable Cashflow Mode</label>
+                            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                                <button type="button" id="modeFixedBtn" onclick="setReturnMode('fixed')" class="py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm">
+                                    <i class="fa-solid fa-lock mr-1"></i> Fixed Rate
+                                </button>
+                                <button type="button" id="modeVariableBtn" onclick="setReturnMode('variable')" class="py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                                    <i class="fa-solid fa-sliders mr-1"></i> Variable Yearly Schedule
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Baseline / Fixed Annual Return Rate -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="returnRateInput" class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300" id="returnRateLabel">Expected Annual Return Rate (%)</label>
+                                <div class="flex items-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5">
+                                    <input type="number" id="returnRateInput" value="12" min="-50" max="100" step="0.25" oninput="syncSlider('returnRateInput', 'returnRateSlider'); calculateAll()" class="num-font w-16 text-right text-sm font-semibold bg-transparent focus:outline-none">
+                                    <span class="text-xs text-slate-400 ml-1">%</span>
+                                </div>
+                            </div>
+                            <input type="range" id="returnRateSlider" min="0" max="30" step="0.25" value="12" oninput="syncInput('returnRateSlider', 'returnRateInput'); calculateAll()" class="w-full">
+                        </div>
+
+                        <!-- Variable Mode Editor Panel (Hidden when Fixed is active) -->
+                        <div id="variableSchedulePanel" class="hidden space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+                            <div class="flex flex-wrap items-center justify-between gap-2 bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-3">
+                                <div>
+                                    <h4 class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Custom Year-by-Year Schedule</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Customize annual return rate (%), custom SIP override, or one-time extra injection/lumpsum per year.</p>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <button type="button" onclick="applyVariablePreset('flat')" class="px-2.5 py-1 text-[11px] font-medium rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-indigo-500 transition">Reset to Base</button>
+                                    <button type="button" onclick="applyVariablePreset('stepdown')" class="px-2.5 py-1 text-[11px] font-medium rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-indigo-500 transition">Glide Down</button>
+                                    <button type="button" onclick="applyVariablePreset('cycle')" class="px-2.5 py-1 text-[11px] font-medium rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-indigo-500 transition">Market Cycle</button>
+                                </div>
+                            </div>
+
+                            <div class="max-h-64 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                                <table class="w-full text-left border-collapse text-xs">
+                                    <thead class="bg-slate-100 dark:bg-slate-800/90 sticky top-0 z-10 text-[11px] uppercase text-slate-500 dark:text-slate-400">
+                                        <tr>
+                                            <th class="py-2 px-3">Year</th>
+                                            <th class="py-2 px-2">Return (%)</th>
+                                            <th class="py-2 px-2">Extra Lumpsum Add</th>
+                                            <th class="py-2 px-2">Override Periodic SIP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="variableScheduleBody" class="divide-y divide-slate-200 dark:divide-slate-800 num-font">
+                                        <!-- Dynamically populated rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Compounding Frequency -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Compounding Frequency</label>
+                                <select id="compoundingFreq" onchange="calculateAll()" class="w-full text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="12" selected>Monthly Compounding</option>
+                                    <option value="1">Annual Compounding</option>
+                                    <option value="4">Quarterly Compounding</option>
+                                    <option value="365">Daily Compounding</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">SIP Contribution Stop Year</label>
+                                <div class="relative">
+                                    <input type="number" id="sipStopYear" value="0" min="0" max="100" oninput="calculateAll()" placeholder="0 = Full Duration" class="num-font w-full text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Leave 0 to contribute for all years, or set a year to stop adding SIP and let corpus grow">
+                                    <span class="absolute right-2.5 top-2 text-[11px] text-slate-400">0 = Never Stop</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: SYSTEMATIC WITHDRAWAL PLAN (SWP) -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center text-xs font-bold">3</span>
+                            <h3 class="font-semibold text-sm sm:text-base">Withdrawals (SWP Engine)</h3>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="enableSwp" onchange="toggleSwpPanel(); calculateAll()" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
+
+                    <div id="swpPanel" class="hidden p-5 space-y-4">
+                        <!-- Withdrawal Amount -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="swpAmountInput" class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Periodic Withdrawal Amount</label>
+                                <input type="number" id="swpAmountInput" value="3000" min="0" step="500" oninput="syncSlider('swpAmountInput', 'swpAmountSlider'); calculateAll()" class="num-font w-36 text-right text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            </div>
+                            <input type="range" id="swpAmountSlider" min="0" max="100000" step="500" value="3000" oninput="syncInput('swpAmountSlider', 'swpAmountInput'); calculateAll()" class="w-full">
+                        </div>
+
+                        <!-- Withdrawal Frequency & Custom Days -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Withdrawal Frequency</label>
+                                <select id="swpFrequency" onchange="toggleCustomDays('swp'); calculateAll()" class="w-full text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                    <option value="monthly" selected>Monthly (12 / year)</option>
+                                    <option value="weekly">Weekly (52 / year)</option>
+                                    <option value="quarterly">Quarterly (4 / year)</option>
+                                    <option value="annually">Annually (1 / year)</option>
+                                    <option value="custom">Custom Number of Days...</option>
+                                </select>
+                            </div>
+
+                            <div id="swpCustomDaysWrap" class="hidden">
+                                <label class="block text-xs font-medium text-amber-500 mb-1">Withdraw Every (Days)</label>
+                                <div class="relative">
+                                    <input type="number" id="swpCustomDays" value="30" min="1" max="3650" oninput="calculateAll()" class="num-font w-full text-sm font-semibold bg-amber-500/10 border border-amber-500/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                    <span class="absolute right-3 top-2 text-xs text-amber-500">days</span>
+                                </div>
+                            </div>
+
+                            <!-- Start Year of Withdrawal -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Start Withdrawals From Year</label>
+                                <input type="number" id="swpStartYear" value="6" min="1" max="100" oninput="calculateAll()" class="num-font w-full text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            </div>
+
+                            <!-- End Year of Withdrawal -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">End Withdrawals At Year (0 = End)</label>
+                                <input type="number" id="swpEndYear" value="0" min="0" max="100" oninput="calculateAll()" class="num-font w-full text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            </div>
+                        </div>
+
+                        <!-- Annual Inflation Step-up on Withdrawals -->
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                            <div>
+                                <span class="text-xs font-medium text-slate-700 dark:text-slate-200">Annual Withdrawal Increase (%)</span>
+                                <p class="text-[11px] text-slate-400">Adjust withdrawals yearly to keep up with inflation</p>
+                            </div>
+                            <div class="flex items-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1">
+                                <input type="number" id="swpStepUp" value="0" min="0" max="50" step="0.5" oninput="calculateAll()" class="num-font w-14 text-right text-sm font-semibold bg-transparent focus:outline-none">
+                                <span class="text-xs text-slate-400 ml-1">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: INFLATION, EXPENSE RATIO & TAX -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-xs font-bold">4</span>
+                            <h3 class="font-semibold text-sm sm:text-base">Inflation (Today's Money) & Fees</h3>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-mono">REAL VALUE</span>
+                    </div>
+
+                    <div class="p-5 space-y-4">
+                        <!-- Inflation Rate -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <div>
+                                    <label for="inflationInput" class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Expected Annual Inflation Rate (%)</label>
+                                    <p class="text-[11px] text-slate-400">Discounts future corpus to show purchasing power in today's money</p>
+                                </div>
+                                <div class="flex items-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5">
+                                    <input type="number" id="inflationInput" value="6" min="0" max="50" step="0.25" oninput="syncSlider('inflationInput', 'inflationSlider'); calculateAll()" class="num-font w-14 text-right text-sm font-semibold bg-transparent focus:outline-none">
+                                    <span class="text-xs text-slate-400 ml-1">%</span>
+                                </div>
+                            </div>
+                            <input type="range" id="inflationSlider" min="0" max="20" step="0.25" value="6" oninput="syncInput('inflationSlider', 'inflationInput'); calculateAll()" class="w-full">
+                        </div>
+
+                        <!-- Expense Ratio & Exit Capital Gains Tax -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Annual Fund Expense Ratio (%)</label>
+                                <input type="number" id="expenseRatio" value="0" min="0" max="10" step="0.1" oninput="calculateAll()" class="num-font w-full text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Tax on Total Gain at Exit (%)</label>
+                                <input type="number" id="taxRate" value="0" min="0" max="50" step="0.5" oninput="calculateAll()" class="num-font w-full text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: LIVE RESULTS, CHARTS & BREAKDOWN TABLE (7 Cols on large screens) -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- Early Depletion Warning Alert (Shown only if SWP exhausts corpus) -->
+                <div id="depletionWarning" class="hidden p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 flex items-center gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                    <div class="text-xs sm:text-sm">
+                        <span class="font-bold">Corpus Depletion Alert:</span> Your scheduled withdrawals exceed your investment balance in <span id="depletionTimeText" class="font-bold underline">Year X</span>. Consider reducing withdrawal amounts or delaying the withdrawal start year.
+                    </div>
+                </div>
+
+                <!-- TOP KPI SUMMARY CARDS (Strictly Unit-Free Numbers) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+
+                    <!-- Card 1: Final Maturity Value (Nominal) -->
+                    <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-5 text-white shadow-lg shadow-indigo-500/15 relative overflow-hidden sm:col-span-2 xl:col-span-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-indigo-100">Final Maturity Value</span>
+                            <i class="fa-solid fa-vault text-indigo-200/80"></i>
+                        </div>
+                        <div id="kpiFinalValue" class="num-font text-2xl sm:text-3xl font-bold tracking-tight break-all">0.00</div>
+                        <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-xs text-indigo-100">
+                            <span>Post-Tax Value:</span>
+                            <span id="kpiPostTaxValue" class="num-font font-semibold">0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Value in Today's Money (Inflation-Adjusted) -->
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Value in Today's Money</span>
+                                <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-500/10 text-emerald-500 num-font" id="realReturnBadge">Real: 5.66%</span>
+                            </div>
+                            <div id="kpiTodaysMoney" class="num-font text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white break-all">0.00</div>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                            <span>Purchasing Power Loss:</span>
+                            <span id="kpiInflationLoss" class="num-font font-medium text-rose-500">0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Total Invested & Total Gain -->
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between sm:col-span-2 xl:col-span-1">
+                        <div class="space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Total Invested Amount</span>
+                                <span id="kpiTotalInvested" class="num-font text-base font-bold text-slate-900 dark:text-white">0.00</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Total Wealth Gain</span>
+                                <span id="kpiTotalGain" class="num-font text-base font-bold text-emerald-500">0.00</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Total Withdrawn (SWP)</span>
+                                <span id="kpiTotalWithdrawn" class="num-font text-base font-bold text-amber-500">0.00</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                            <span>Wealth Multiplier:</span>
+                            <span id="kpiMultiplier" class="num-font font-bold text-indigo-500">1.00x</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CHARTS SECTION -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h3 class="font-semibold text-base">Wealth Growth Trajectory & Purchasing Power</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Comparison of Invested Capital, Nominal Maturity Value, and Inflation-Adjusted Value</p>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                            <button type="button" id="tabChartLine" onclick="switchChartTab('growth')" class="px-3 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition">Growth Curve</button>
+                            <button type="button" id="tabChartBar" onclick="switchChartTab('cashflow')" class="px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 transition">Yearly Cashflows</button>
+                            <button type="button" id="tabChartPie" onclick="switchChartTab('split')" class="px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 transition">Corpus Split</button>
+                        </div>
+                    </div>
+
+                    <div class="relative h-80 sm:h-96 w-full">
+                        <canvas id="mainChartCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- YEAR-BY-YEAR SCHEDULE TABLE -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-semibold text-base">Year-by-Year Breakdown Schedule</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Detailed annual ledger of contributions, returns, withdrawals, and real value</p>
+                        </div>
+                        <button onclick="exportTableToCSV()" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-csv"></i>
+                            <span>Export CSV</span>
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[460px]">
+                        <table class="w-full text-right border-collapse text-xs sm:text-sm">
+                            <thead class="bg-slate-100 dark:bg-slate-800/90 sticky top-0 z-10 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="py-3 px-3 text-left">Period</th>
+                                    <th class="py-3 px-3">Opening Bal</th>
+                                    <th class="py-3 px-3">Added (SIP+Lump)</th>
+                                    <th class="py-3 px-3">Withdrawn</th>
+                                    <th class="py-3 px-3">Rate (%)</th>
+                                    <th class="py-3 px-3">Gain Earned</th>
+                                    <th class="py-3 px-3 font-bold text-indigo-600 dark:text-indigo-400">Closing Value</th>
+                                    <th class="py-3 px-3 font-bold text-emerald-600 dark:text-emerald-400">Today's Money</th>
+                                </tr>
+                            </thead>
+                            <tbody id="breakdownTableBody" class="divide-y divide-slate-200 dark:divide-slate-800 num-font text-xs">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL 1: TARGET CORPUS GOAL FINDER -->
+    <div id="goalModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <h3 class="font-bold text-lg">Reverse Goal Planner</h3>
+                </div>
+                <button onclick="closeModal('goalModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                Enter your desired target maturity amount. Using your current duration (<span id="goalModalYears" class="font-semibold text-slate-800 dark:text-slate-200">15</span> yrs), return rate (<span id="goalModalRate" class="font-semibold text-slate-800 dark:text-slate-200">12%</span>), and initial lumpsum, we will calculate the exact periodic SIP required.
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Target Maturity Corpus Needed</label>
+                    <input type="number" id="goalTargetAmount" value="5000000" min="100" step="10000" oninput="computeReverseGoal()" class="num-font w-full text-lg font-bold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="goalInflationAdjust" onchange="computeReverseGoal()" class="rounded text-emerald-500 focus:ring-emerald-500">
+                    <label for="goalInflationAdjust" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">Target is in <strong>Today's Money</strong> (automatically scale target for inflation)</label>
+                </div>
+
+                <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+                    <div class="flex justify-between items-center text-xs text-emerald-700 dark:text-emerald-300">
+                        <span>Inflation-Adjusted Nominal Target Required:</span>
+                        <span id="goalAdjustedTarget" class="num-font font-bold">5,000,000.00</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-emerald-500/20">
+                        <span class="text-sm font-semibold text-slate-800 dark:text-white">Required Periodic SIP:</span>
+                        <span id="goalRequiredSip" class="num-font text-xl font-bold text-emerald-600 dark:text-emerald-400">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('goalModal')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Close</button>
+                <button onclick="applyGoalSip()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm">Apply This SIP to Calculator</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: GITHUB PAGES DEPLOYMENT GUIDE -->
+    <div id="githubModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-brands fa-github text-2xl text-indigo-500"></i>
+                    <h3 class="font-bold text-lg">Publish on GitHub Pages in 3 Steps</h3>
+                </div>
+                <button onclick="closeModal('githubModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                <p>This calculator is built as a <strong>100% self-contained single HTML file</strong> (<code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono">index.html</code>) with zero build steps required.</p>
+                <ol class="list-decimal list-inside space-y-2.5">
+                    <li><strong>Save File:</strong> Save this code on your computer with the exact filename <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-indigo-500">index.html</code>.</li>
+                    <li><strong>Upload to GitHub:</strong> Sign in to <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="text-indigo-500 underline">GitHub.com</a>, click <strong>New Repository</strong>, give it any name (e.g., <code class="font-mono">sip-calculator</code>), set it to <strong>Public</strong>, and upload your <code class="font-mono">index.html</code> file.</li>
+                    <li><strong>Enable GitHub Pages:</strong> Open your repository's <strong>Settings → Pages</strong>, under <em>Branch</em> select <code class="font-mono">main</code> (or <code class="font-mono">master</code>) and click <strong>Save</strong>. Your live web calculator will be published worldwide within 60 seconds!</li>
+                </ol>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closeModal('githubModal')" class="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white">Got It</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLICATION JAVASCRIPT ENGINE -->
+    <script>
+        // --- Global State ---
+        let returnMode = 'fixed'; // 'fixed' | 'variable'
+        let activeChartTab = 'growth'; // 'growth' | 'cashflow' | 'split'
+        let chartInstance = null;
+        let yearlyScheduleData = []; // Stores custom per-year overrides { rate, extraLump, customSip }
+        let lastSimulationResult = null;
+        let calculatedGoalSip = 0;
+
+        // --- Number Formatting (Strictly NO Currency Symbols or Units) ---
+        function formatNumber(val, forceDecimals = null) {
+            if (val === null || val === undefined || isNaN(val)) return '0';
+            const decSelect = document.getElementById('decimalPlaces');
+            const decimals = forceDecimals !== null ? forceDecimals : (decSelect ? parseInt(decSelect.value, 10) : 2);
+            return Number(val).toLocaleString('en-US', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
+
+        // --- Slider & Input Synchronization ---
+        function syncSlider(inputId, sliderId) {
+            const input = document.getElementById(inputId);
+            const slider = document.getElementById(sliderId);
+            if (input && slider) {
+                slider.value = input.value;
+            }
+        }
+
+        function syncInput(sliderId, inputId) {
+            const slider = document.getElementById(sliderId);
+            const input = document.getElementById(inputId);
+            if (slider && input) {
+                input.value = slider.value;
+            }
+        }
+
+        // --- Toggle Custom Days Input ---
+        function toggleCustomDays(type) {
+            if (type === 'sip') {
+                const freq = document.getElementById('sipFrequency').value;
+                const wrap = document.getElementById('sipCustomDaysWrap');
+                if (freq === 'custom') {
+                    wrap.classList.remove('hidden');
+                } else {
+                    wrap.classList.add('hidden');
+                }
+            } else if (type === 'swp') {
+                const freq = document.getElementById('swpFrequency').value;
+                const wrap = document.getElementById('swpCustomDaysWrap');
+                if (freq === 'custom') {
+                    wrap.classList.remove('hidden');
+                } else {
+                    wrap.classList.add('hidden');
+                }
+            }
+        }
+
+        // --- Toggle SWP Panel ---
+        function toggleSwpPanel() {
+            const enabled = document.getElementById('enableSwp').checked;
+            const panel = document.getElementById('swpPanel');
+            if (enabled) {
+                panel.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
+
+        // --- Return Mode Switching (Fixed vs Variable Yearly Schedule) ---
+        function setReturnMode(mode) {
+            returnMode = mode;
+            const fixedBtn = document.getElementById('modeFixedBtn');
+            const varBtn = document.getElementById('modeVariableBtn');
+            const varPanel = document.getElementById('variableSchedulePanel');
+            const rateLabel = document.getElementById('returnRateLabel');
+
+            if (mode === 'variable') {
+                varPanel.classList.remove('hidden');
+                rateLabel.textContent = 'Default / Base Annual Return Rate (%)';
+                varBtn.className = 'py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm';
+                fixedBtn.className = 'py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+                rebuildVariableSchedule();
+            } else {
+                varPanel.classList.add('hidden');
+                rateLabel.textContent = 'Expected Annual Return Rate (%)';
+                fixedBtn.className = 'py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm';
+                varBtn.className = 'py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+            }
+            calculateAll();
+        }
+
+        // --- Build or Update Variable Schedule Table ---
+        function rebuildVariableSchedule() {
+            const years = parseInt(document.getElementById('durationYears').value || 0, 10);
+            const months = parseInt(document.getElementById('durationMonths').value || 0, 10);
+            const totalYears = Math.max(1, years + (months > 0 ? 1 : 0));
+            const baseRate = parseFloat(document.getElementById('returnRateInput').value || 12);
+
+            while (yearlyScheduleData.length < totalYears) {
+                yearlyScheduleData.push({
+                    rate: baseRate,
+                    extraLump: 0,
+                    customSip: '' // Empty string means follow standard SIP + Step-Up rule
+                });
+            }
+            if (yearlyScheduleData.length > totalYears) {
+                yearlyScheduleData.length = totalYears;
+            }
+
+            const tbody = document.getElementById('variableScheduleBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            yearlyScheduleData.forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
+                tr.innerHTML = `
+                    <td class="py-1.5 px-3 font-semibold text-slate-700 dark:text-slate-300">Yr ${idx + 1}</td>
+                    <td class="py-1.5 px-2">
+                        <input type="number" step="0.25" value="${row.rate}" oninput="updateVariableCell(${idx}, 'rate', this.value)"
+                            class="w-20 text-right bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </td>
+                    <td class="py-1.5 px-2">
+                        <input type="number" step="500" value="${row.extraLump}" oninput="updateVariableCell(${idx}, 'extraLump', this.value)"
+                            class="w-28 text-right bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="0">
+                    </td>
+                    <td class="py-1.5 px-2">
+                        <input type="number" step="500" value="${row.customSip}" oninput="updateVariableCell(${idx}, 'customSip', this.value)"
+                            class="w-28 text-right bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Auto">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateVariableCell(index, field, val) {
+            if (!yearlyScheduleData[index]) return;
+            if (field === 'customSip') {
+                yearlyScheduleData[index].customSip = val === '' ? '' : parseFloat(val);
+            } else {
+                yearlyScheduleData[index][field] = parseFloat(val) || 0;
+            }
+            calculateAll();
+        }
+
+        function applyVariablePreset(preset) {
+            const baseRate = parseFloat(document.getElementById('returnRateInput').value || 12);
+            const total = yearlyScheduleData.length;
+            yearlyScheduleData.forEach((row, i) => {
+                if (preset === 'flat') {
+                    row.rate = baseRate;
+                    row.extraLump = 0;
+                    row.customSip = '';
+                } else if (preset === 'stepdown') {
+                    // Gradual glide path from baseRate down to 6% as maturity nears
+                    const progress = total > 1 ? i / (total - 1) : 0;
+                    row.rate = Number((baseRate - progress * (baseRate * 0.45)).toFixed(2));
+                } else if (preset === 'cycle') {
+                    // Realistic volatile market cycle wave around baseRate
+                    const wave = Math.sin((i + 1) * 1.1) * 6;
+                    row.rate = Number((baseRate + wave).toFixed(2));
+                }
+            });
+            rebuildVariableSchedule();
+            calculateAll();
+            showToast('Applied variable schedule preset');
+        }
+
+        // --- Helper: Convert Frequency to Interval in Days ---
+        function getFrequencyDays(freq, customDaysValue) {
+            switch (freq) {
+                case 'daily': return 1;
+                case 'weekly': return 365 / 52;
+                case 'biweekly': return 14;
+                case 'monthly': return 365 / 12;
+                case 'quarterly': return 365 / 4;
+                case 'annually': return 365;
+                case 'custom': return Math.max(1, parseFloat(customDaysValue) || 30);
+                default: return 365 / 12;
+            }
+        }
+
+        // --- Core Day-Precision Financial Simulation Engine ---
+        function runSimulation(overrideSipAmount = null) {
+            const initialLumpsum = Math.max(0, parseFloat(document.getElementById('lumpsumInput').value) || 0);
+            const baseSip = overrideSipAmount !== null ? overrideSipAmount : Math.max(0, parseFloat(document.getElementById('sipAmountInput').value) || 0);
+            const sipFreq = document.getElementById('sipFrequency').value;
+            const sipCustomDays = parseFloat(document.getElementById('sipCustomDays').value) || 15;
+            const sipTiming = document.getElementById('sipTiming').value; // 'start' | 'end'
+            const stepUpType = document.getElementById('stepUpType').value; // 'percent' | 'flat'
+            const stepUpVal = Math.max(0, parseFloat(document.getElementById('stepUpInput').value) || 0);
+            const sipStopYear = Math.max(0, parseInt(document.getElementById('sipStopYear').value) || 0);
+
+            const durYears = Math.max(0, parseInt(document.getElementById('durationYears').value) || 0);
+            const durMonths = Math.max(0, parseInt(document.getElementById('durationMonths').value) || 0);
+            const totalMonths = Math.max(1, durYears * 12 + durMonths);
+            const totalDays = Math.round(totalMonths * (365 / 12));
+
+            const fixedReturnRate = parseFloat(document.getElementById('returnRateInput').value) || 0;
+            const compoundingPeriodsPerYear = parseInt(document.getElementById('compoundingFreq').value) || 12;
+            const inflationRate = Math.max(0, parseFloat(document.getElementById('inflationInput').value) || 0);
+            const expenseRatio = Math.max(0, parseFloat(document.getElementById('expenseRatio').value) || 0);
+            const taxRate = Math.max(0, parseFloat(document.getElementById('taxRate').value) || 0);
+
+            // SWP Settings
+            const swpEnabled = document.getElementById('enableSwp').checked && overrideSipAmount === null;
+            const baseSwp = Math.max(0, parseFloat(document.getElementById('swpAmountInput').value) || 0);
+            const swpFreq = document.getElementById('swpFrequency').value;
+            const swpCustomDays = parseFloat(document.getElementById('swpCustomDays').value) || 30;
+            const swpStartYear = Math.max(1, parseInt(document.getElementById('swpStartYear').value) || 1);
+            const swpEndYear = Math.max(0, parseInt(document.getElementById('swpEndYear').value) || 0);
+            const swpStepUp = Math.max(0, parseFloat(document.getElementById('swpStepUp').value) || 0);
+
+            const sipIntervalDays = getFrequencyDays(sipFreq, sipCustomDays);
+            const swpIntervalDays = getFrequencyDays(swpFreq, swpCustomDays);
+
+            let balance = initialLumpsum;
+            let totalInvested = initialLumpsum;
+            let totalWithdrawn = 0;
+            let depletedYear = null;
+
+            let nextSipDay = sipTiming === 'start' ? 1 : Math.round(sipIntervalDays);
+            let nextSwpDay = Math.round((swpStartYear - 1) * 365 + 1);
+
+            const yearlyRows = [];
+            let currentYearIndex = 0;
+            let yearOpeningBalance = initialLumpsum;
+            let yearContributions = initialLumpsum; // Day 1 includes initial lumpsum
+            let yearWithdrawals = 0;
+            let yearInterest = 0;
+            let currentPeriodicSip = baseSip;
+
+            for (let day = 1; day <= totalDays; day++) {
+                const yearNum = Math.floor((day - 1) / 365) + 1;
+                const isNewYear = (day > 1) && ((day - 1) % 365 === 0);
+
+                if (isNewYear) {
+                    currentYearIndex++;
+                    yearOpeningBalance = balance;
+                    yearContributions = 0;
+                    yearWithdrawals = 0;
+                    yearInterest = 0;
+
+                    // Apply annual SIP Step-Up
+                    if (stepUpType === 'percent') {
+                        currentPeriodicSip = currentPeriodicSip * (1 + stepUpVal / 100);
+                    } else {
+                        currentPeriodicSip = currentPeriodicSip + stepUpVal;
+                    }
+                }
+
+                // Check Variable Schedule Overrides for current year
+                const varConfig = (returnMode === 'variable' && yearlyScheduleData[yearNum - 1])
+                    ? yearlyScheduleData[yearNum - 1]
+                    : null;
+
+                // One-time Extra Lumpsum Injection at start of Year in Variable Mode
+                if (((day - 1) % 365 === 0) && varConfig && varConfig.extraLump > 0) {
+                    balance += varConfig.extraLump;
+                    totalInvested += varConfig.extraLump;
+                    yearContributions += varConfig.extraLump;
+                }
+
+                // Determine active periodic SIP for this year
+                const activeSipAmount = (varConfig && varConfig.customSip !== '' && !isNaN(varConfig.customSip))
+                    ? Number(varConfig.customSip)
+                    : currentPeriodicSip;
+
+                // Process SIP Contribution if scheduled on this day
+                const sipAllowedThisYear = (sipStopYear === 0) || (yearNum <= sipStopYear);
+                while (day >= Math.round(nextSipDay)) {
+                    if (sipAllowedThisYear && activeSipAmount > 0) {
+                        balance += activeSipAmount;
+                        totalInvested += activeSipAmount;
+                        yearContributions += activeSipAmount;
+                    }
+                    nextSipDay += sipIntervalDays;
+                }
+
+                // Process SWP Withdrawal if enabled and within active year range
+                if (swpEnabled && baseSwp > 0 && yearNum >= swpStartYear && (swpEndYear === 0 || yearNum <= swpEndYear)) {
+                    while (day >= Math.round(nextSwpDay)) {
+                        const yearsSinceSwpStart = Math.max(0, yearNum - swpStartYear);
+                        const activeSwpAmount = baseSwp * Math.pow(1 + swpStepUp / 100, yearsSinceSwpStart);
+
+                        if (balance > 0) {
+                            const actualWithdrawal = Math.min(balance, activeSwpAmount);
+                            balance -= actualWithdrawal;
+                            totalWithdrawn += actualWithdrawal;
+                            yearWithdrawals += actualWithdrawal;
+
+                            if (balance <= 0.001 && depletedYear === null) {
+                                balance = 0;
+                                depletedYear = yearNum;
+                            }
+                        } else if (depletedYear === null) {
+                            depletedYear = yearNum;
+                        }
+                        nextSwpDay += swpIntervalDays;
+                    }
+                }
+
+                // Calculate Daily Compound Growth Rate adjusted for Expense Ratio
+                const nominalAnnualRate = (varConfig ? varConfig.rate : fixedReturnRate) - expenseRatio;
+                const rDecimal = nominalAnnualRate / 100;
+                // Convert nominal annual rate compounded M times/yr into equivalent daily rate
+                const effectiveAnnualFactor = Math.pow(1 + rDecimal / compoundingPeriodsPerYear, compoundingPeriodsPerYear);
+                const dailyRate = effectiveAnnualFactor > 0 ? Math.pow(effectiveAnnualFactor, 1 / 365) - 1 : -1;
+
+                if (balance > 0) {
+                    const dailyGain = balance * dailyRate;
+                    balance += dailyGain;
+                    yearInterest += dailyGain;
+                }
+
+                // Record Year-End Snapshot (or Final Day Snapshot)
+                if (day % 365 === 0 || day === totalDays) {
+                    const elapsedYearsExact = day / 365;
+                    const discountFactor = Math.pow(1 + inflationRate / 100, elapsedYearsExact);
+                    const todaysMoneyVal = balance / discountFactor;
+                    const isPartialLastYear = (day === totalDays) && (day % 365 !== 0);
+
+                    yearlyRows.push({
+                        label: isPartialLastYear ? `Yr ${yearNum} (${durMonths}m)` : `Year ${yearNum}`,
+                        yearNum,
+                        opening: yearOpeningBalance,
+                        contributions: yearContributions,
+                        withdrawals: yearWithdrawals,
+                        rate: nominalAnnualRate,
+                        interest: yearInterest,
+                        closing: balance,
+                        todaysMoney: todaysMoneyVal,
+                        cumulativeInvested: totalInvested,
+                        cumulativeWithdrawn: totalWithdrawn
+                    });
+                }
+            }
+
+            const totalDurationYearsExact = totalDays / 365;
+            const finalNominal = balance;
+            const finalTodaysMoney = finalNominal / Math.pow(1 + inflationRate / 100, totalDurationYearsExact);
+            const totalWealthGain = (finalNominal + totalWithdrawn) - totalInvested;
+            const taxableGain = Math.max(0, totalWealthGain);
+            const taxDeducted = taxableGain * (taxRate / 100);
+            const postTaxMaturity = Math.max(0, finalNominal - taxDeducted);
+            const realReturnRate = (((1 + (fixedReturnRate - expenseRatio) / 100) / (1 + inflationRate / 100)) - 1) * 100;
+
+            return {
+                finalNominal,
+                postTaxMaturity,
+                finalTodaysMoney,
+                inflationLoss: Math.max(0, finalNominal - finalTodaysMoney),
+                totalInvested,
+                totalWealthGain,
+                totalWithdrawn,
+                realReturnRate,
+                depletedYear,
+                yearlyRows
+            };
+        }
+
+        // --- Master Update Function ---
+        function calculateAll() {
+            const res = runSimulation();
+            lastSimulationResult = res;
+
+            // Update KPI Cards
+            document.getElementById('kpiFinalValue').textContent = formatNumber(res.finalNominal);
+            document.getElementById('kpiPostTaxValue').textContent = formatNumber(res.postTaxMaturity);
+            document.getElementById('kpiTodaysMoney').textContent = formatNumber(res.finalTodaysMoney);
+            document.getElementById('kpiInflationLoss').textContent = '-' + formatNumber(res.inflationLoss);
+            document.getElementById('kpiTotalInvested').textContent = formatNumber(res.totalInvested);
+            document.getElementById('kpiTotalGain').textContent = (res.totalWealthGain >= 0 ? '+' : '') + formatNumber(res.totalWealthGain);
+            document.getElementById('kpiTotalWithdrawn').textContent = formatNumber(res.totalWithdrawn);
+
+            const mult = res.totalInvested > 0 ? ((res.finalNominal + res.totalWithdrawn) / res.totalInvested) : 0;
+            document.getElementById('kpiMultiplier').textContent = mult.toFixed(2) + 'x';
+            document.getElementById('realReturnBadge').textContent = `Real: ${res.realReturnRate.toFixed(2)}%`;
+
+            // Depletion Alert Banner
+            const warnBanner = document.getElementById('depletionWarning');
+            if (res.depletedYear !== null) {
+                warnBanner.classList.remove('hidden');
+                document.getElementById('depletionTimeText').textContent = `Year ${res.depletedYear}`;
+            } else {
+                warnBanner.classList.add('hidden');
+            }
+
+            // Update Breakdown Table
+            renderBreakdownTable(res.yearlyRows);
+
+            // Update Interactive Chart
+            renderChart(res);
+        }
+
+        // --- Render Year-by-Year Breakdown Table ---
+        function renderBreakdownTable(rows) {
+            const tbody = document.getElementById('breakdownTableBody');
+            tbody.innerHTML = '';
+
+            rows.forEach((r) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 text-left font-semibold text-slate-800 dark:text-slate-200">${r.label}</td>
+                    <td class="py-2.5 px-3 text-slate-600 dark:text-slate-400">${formatNumber(r.opening)}</td>
+                    <td class="py-2.5 px-3 text-indigo-600 dark:text-indigo-400">+${formatNumber(r.contributions)}</td>
+                    <td class="py-2.5 px-3 ${r.withdrawals > 0 ? 'text-amber-500 font-medium' : 'text-slate-400'}">${r.withdrawals > 0 ? '-' + formatNumber(r.withdrawals) : '0'}</td>
+                    <td class="py-2.5 px-3 text-slate-500">${r.rate.toFixed(2)}%</td>
+                    <td class="py-2.5 px-3 ${r.interest >= 0 ? 'text-emerald-500' : 'text-rose-500'}">${r.interest >= 0 ? '+' : ''}${formatNumber(r.interest)}</td>
+                    <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">${formatNumber(r.closing)}</td>
+                    <td class="py-2.5 px-3 font-semibold text-emerald-600 dark:text-emerald-400">${formatNumber(r.todaysMoney)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- Chart Tab Switcher ---
+        function switchChartTab(tab) {
+            activeChartTab = tab;
+            const tabs = {
+                growth: document.getElementById('tabChartLine'),
+                cashflow: document.getElementById('tabChartBar'),
+                split: document.getElementById('tabChartPie')
+            };
+            Object.keys(tabs).forEach(k => {
+                if (k === tab) {
+                    tabs[k].className = 'px-3 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition';
+                } else {
+                    tabs[k].className = 'px-3 py-1 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 transition';
+                }
+            });
+            if (lastSimulationResult) {
+                renderChart(lastSimulationResult);
+            }
+        }
+
+        // --- Render Chart.js Visualizations (Strictly Unit-Free) ---
+        function renderChart(res) {
+            const ctx = document.getElementById('mainChartCanvas').getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(100, 116, 139, 0.12)';
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const labels = res.yearlyRows.map(r => r.label);
+
+            if (activeChartTab === 'growth') {
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Nominal Maturity Value',
+                                data: res.yearlyRows.map(r => r.closing),
+                                borderColor: '#6366f1',
+                                backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                                fill: true,
+                                tension: 0.35,
+                                borderWidth: 2.5,
+                                pointRadius: 2
+                            },
+                            {
+                                label: "Value in Today's Money (Inflation-Adjusted)",
+                                data: res.yearlyRows.map(r => r.todaysMoney),
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                fill: true,
+                                tension: 0.35,
+                                borderWidth: 2.5,
+                                pointRadius: 2
+                            },
+                            {
+                                label: 'Cumulative Invested Amount',
+                                data: res.yearlyRows.map(r => r.cumulativeInvested),
+                                borderColor: '#94a3b8',
+                                borderDash: [5, 5],
+                                fill: false,
+                                tension: 0.2,
+                                borderWidth: 2,
+                                pointRadius: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { labels: { color: textColor, font: { family: 'Inter', size: 12 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                            y: {
+                                ticks: {
+                                    color: textColor,
+                                    callback: (value) => formatNumber(value, 0)
+                                },
+                                grid: { color: gridColor }
+                            }
+                        }
+                    }
+                });
+            } else if (activeChartTab === 'cashflow') {
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Yearly Contributions Added',
+                                data: res.yearlyRows.map(r => r.contributions),
+                                backgroundColor: '#6366f1',
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'Yearly Gain Earned',
+                                data: res.yearlyRows.map(r => r.interest),
+                                backgroundColor: '#10b981',
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'Yearly Withdrawals (SWP)',
+                                data: res.yearlyRows.map(r => -r.withdrawals),
+                                backgroundColor: '#f59e0b',
+                                borderRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { labels: { color: textColor } },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `${ctx.dataset.label}: ${formatNumber(Math.abs(ctx.parsed.y))}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                            y: {
+                                ticks: {
+                                    color: textColor,
+                                    callback: (val) => formatNumber(val, 0)
+                                },
+                                grid: { color: gridColor }
+                            }
+                        }
+                    }
+                });
+            } else if (activeChartTab === 'split') {
+                chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Total Invested Capital', 'Total Wealth Gain', 'Total Withdrawn (SWP)'],
+                        datasets: [{
+                            data: [
+                                Math.max(0, res.totalInvested),
+                                Math.max(0, res.totalWealthGain),
+                                Math.max(0, res.totalWithdrawn)
+                            ],
+                            backgroundColor: ['#6366f1', '#10b981', '#f59e0b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: textColor, padding: 16 } },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `${ctx.label}: ${formatNumber(ctx.parsed)}`
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // --- Reverse Target Goal Finder ---
+        function computeReverseGoal() {
+            const rawTarget = Math.max(0, parseFloat(document.getElementById('goalTargetAmount').value) || 0);
+            const adjustForInflation = document.getElementById('goalInflationAdjust').checked;
+            const durYears = Math.max(0, parseInt(document.getElementById('durationYears').value) || 0);
+            const durMonths = Math.max(0, parseInt(document.getElementById('durationMonths').value) || 0);
+            const totalYearsExact = durYears + durMonths / 12;
+            const inflationRate = Math.max(0, parseFloat(document.getElementById('inflationInput').value) || 0);
+
+            document.getElementById('goalModalYears').textContent = totalYearsExact.toFixed(1);
+            document.getElementById('goalModalRate').textContent = document.getElementById('returnRateInput').value + '%';
+
+            const effectiveNominalTarget = adjustForInflation
+                ? rawTarget * Math.pow(1 + inflationRate / 100, totalYearsExact)
+                : rawTarget;
+
+            document.getElementById('goalAdjustedTarget').textContent = formatNumber(effectiveNominalTarget);
+
+            // Binary Search using the exact simulation engine to find required Periodic SIP
+            let low = 0;
+            let high = effectiveNominalTarget * 2;
+            const zeroSipRun = runSimulation(0);
+
+            if (zeroSipRun.finalNominal >= effectiveNominalTarget) {
+                calculatedGoalSip = 0;
+            } else {
+                for (let iter = 0; iter < 40; iter++) {
+                    const mid = (low + high) / 2;
+                    const sim = runSimulation(mid);
+                    if (sim.finalNominal < effectiveNominalTarget) {
+                        low = mid;
+                    } else {
+                        high = mid;
+                    }
+                }
+                calculatedGoalSip = high;
+            }
+
+            document.getElementById('goalRequiredSip').textContent = formatNumber(calculatedGoalSip);
+        }
+
+        function applyGoalSip() {
+            const roundedSip = Math.ceil(calculatedGoalSip);
+            document.getElementById('sipAmountInput').value = roundedSip;
+            document.getElementById('sipAmountSlider').value = roundedSip;
+            closeModal('goalModal');
+            calculateAll();
+            showToast('Target SIP applied to calculator!');
+        }
+
+        // --- Export Breakdown Table to CSV ---
+        function exportTableToCSV() {
+            if (!lastSimulationResult || !lastSimulationResult.yearlyRows.length) return;
+            const headers = ['Period', 'Opening Balance', 'Contributions Added', 'Withdrawals', 'Return Rate (%)', 'Gain Earned', 'Closing Value (Nominal)', 'Value in Todays Money'];
+            const csvRows = [headers.join(',')];
+
+            lastSimulationResult.yearlyRows.forEach(r => {
+                csvRows.push([
+                    `"${r.label}"`,
+                    r.opening.toFixed(2),
+                    r.contributions.toFixed(2),
+                    r.withdrawals.toFixed(2),
+                    r.rate.toFixed(2),
+                    r.interest.toFixed(2),
+                    r.closing.toFixed(2),
+                    r.todaysMoney.toFixed(2)
+                ].join(','));
+            });
+
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sip_investment_schedule.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('Exported schedule to CSV!');
+        }
+
+        // --- Share Configuration via URL Query Params ---
+        function copyShareableUrl() {
+            const params = new URLSearchParams({
+                lump: document.getElementById('lumpsumInput').value,
+                sip: document.getElementById('sipAmountInput').value,
+                sipFreq: document.getElementById('sipFrequency').value,
+                sipDays: document.getElementById('sipCustomDays').value,
+                stepUp: document.getElementById('stepUpInput').value,
+                yrs: document.getElementById('durationYears').value,
+                mos: document.getElementById('durationMonths').value,
+                rate: document.getElementById('returnRateInput').value,
+                inf: document.getElementById('inflationInput').value,
+                swp: document.getElementById('enableSwp').checked ? 1 : 0,
+                swpAmt: document.getElementById('swpAmountInput').value,
+                swpFreq: document.getElementById('swpFrequency').value,
+                swpStart: document.getElementById('swpStartYear').value
+            });
+
+            const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = shareUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('Shareable configuration URL copied to clipboard!');
+        }
+
+        function loadFromUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has('sip') && !params.has('lump')) return;
+
+            const setVal = (id, key) => {
+                if (params.has(key) && document.getElementById(id)) {
+                    document.getElementById(id).value = params.get(key);
+                }
+            };
+
+            setVal('lumpsumInput', 'lump');
+            syncSlider('lumpsumInput', 'lumpsumSlider');
+            setVal('sipAmountInput', 'sip');
+            syncSlider('sipAmountInput', 'sipAmountSlider');
+            setVal('sipFrequency', 'sipFreq');
+            setVal('sipCustomDays', 'sipDays');
+            toggleCustomDays('sip');
+            setVal('stepUpInput', 'stepUp');
+            syncSlider('stepUpInput', 'stepUpSlider');
+            setVal('durationYears', 'yrs');
+            syncSlider('durationYears', 'durationSlider');
+            setVal('durationMonths', 'mos');
+            setVal('returnRateInput', 'rate');
+            syncSlider('returnRateInput', 'returnRateSlider');
+            setVal('inflationInput', 'inf');
+            syncSlider('inflationInput', 'inflationSlider');
+
+            if (params.get('swp') === '1') {
+                document.getElementById('enableSwp').checked = true;
+                toggleSwpPanel();
+            }
+            setVal('swpAmountInput', 'swpAmt');
+            setVal('swpFrequency', 'swpFreq');
+            setVal('swpStartYear', 'swpStart');
+            toggleCustomDays('swp');
+        }
+
+        // --- Reset Defaults ---
+        function resetDefaults() {
+            document.getElementById('lumpsumInput').value = 50000;
+            syncSlider('lumpsumInput', 'lumpsumSlider');
+            document.getElementById('sipAmountInput').value = 5000;
+            syncSlider('sipAmountInput', 'sipAmountSlider');
+            document.getElementById('sipFrequency').value = 'monthly';
+            toggleCustomDays('sip');
+            document.getElementById('stepUpInput').value = 5;
+            syncSlider('stepUpInput', 'stepUpSlider');
+            document.getElementById('durationYears').value = 15;
+            syncSlider('durationYears', 'durationSlider');
+            document.getElementById('durationMonths').value = 0;
+            document.getElementById('returnRateInput').value = 12;
+            syncSlider('returnRateInput', 'returnRateSlider');
+            document.getElementById('inflationInput').value = 6;
+            syncSlider('inflationInput', 'inflationSlider');
+            document.getElementById('expenseRatio').value = 0;
+            document.getElementById('taxRate').value = 0;
+            document.getElementById('sipStopYear').value = 0;
+            document.getElementById('enableSwp').checked = false;
+            toggleSwpPanel();
+            setReturnMode('fixed');
+            calculateAll();
+            showToast('All inputs reset to default values');
+        }
+
+        // --- Modal & Theme Helpers ---
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            if (id === 'goalModal') computeReverseGoal();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            if (lastSimulationResult) renderChart(lastSimulationResult);
+        }
+
+        function showToast(msg) {
+            const banner = document.getElementById('toastBanner');
+            document.getElementById('toastMessage').textContent = msg;
+            banner.classList.remove('hidden');
+            setTimeout(() => banner.classList.add('hidden'), 3000);
+        }
+
+        // --- Initialize on Load ---
+        window.onload = function () {
+            loadFromUrlParams();
+            rebuildVariableSchedule();
+            calculateAll();
+        };
+    </script>
+</body>
+</html>
